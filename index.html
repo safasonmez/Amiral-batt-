@@ -78,12 +78,12 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 const FLEET=[{n:"carrier",l:5},{n:"battleship",l:4},{n:"cruiser",l:3},{n:"submarine",l:3},{n:"destroyer",l:2}];
 const L={
 tr:{title:"Amiral Battı",sub:"Filonu yerleştir, rakibin gemilerini bul ve batır.",vsCpu:"Bilgisayara karşı",online:"Online 2 kişilik",soon:"yakında",
-place:"Gemilerini yerleştir",placeHint:"Bir hücreye dokun: gemi önizlemesi görünür. Yerleştirmek için aynı hücreye tekrar dokun, yerini değiştirmek için başka bir hücreye dokun. R tuşu ya da Döndür düğmesi yönü değiştirir.",rotate:"Döndür",horiz:"yatay",vert:"dikey",random:"Rastgele yerleştir",reset:"Sıfırla",start:"Savaşı başlat",
+place:"Gemilerini yerleştir",placeHint:"Bir hücreye tıkla veya dokun, gemi o hücreden başlar. R tuşu ya da Döndür düğmesi yönü değiştirir.",rotate:"Döndür",horiz:"yatay",vert:"dikey",random:"Rastgele yerleştir",reset:"Sıfırla",start:"Savaşı başlat",
 yours:"Senin tahtan",enemy:"Rakip tahtası",left:"kalan gemi",yourTurn:"Sıra sende: rakip tahtasında bir hücre seç.",cpuTurn:"Bilgisayar atış yapıyor…",you:"Sen",cpu:"Bilgisayar",
 miss:"Iska",hit:"Vurdu!",sunk:"Battı!",win:"Kazandın!",lose:"Kaybettin",winSub:"Rakibin tüm gemilerini batırdın.",loseSub:"Tüm gemilerin battı.",shots:"Atış sayın",again:"Yeniden oyna",menu:"Ana menü",
 carrier:"Uçak gemisi",battleship:"Savaş gemisi",cruiser:"Kruvazör",submarine:"Denizaltı",destroyer:"Muhrip",none:"Henüz atış yok.",diff:"Zorluk",easy:"Kolay",hard:"Zor",sndOn:"Ses açık",sndOff:"Ses kapalı",opp:"Rakip",lobbyHint:"Yeni bir oda kur ve kodu arkadaşına gönder, ya da arkadaşının kodunu girerek katıl.",createRoom:"Oda kur",joinRoom:"Koda katıl",join:"Katıl",code:"Oda kodu",roomCode:"Oda kodu",shareCode:"Bu kodu arkadaşına gönder. O katılınca yerleştirme ekranı açılır.",ready:"Hazırım",waitOpp:"Rakip bekleniyor…",oppReady:"Rakip hazır, sen de gemilerini yerleştir.",oppTurn:"Rakip atış yapıyor…",oppRematch:"Rakip tekrar oynamak istiyor.",notfound:"Bu kodla bir oda bulunamadı.",full:"Bu oda dolu.",connfail:"Sunucuya bağlanılamadı.",needServer:"Online mod için oyunu sunucu üzerinden aç (ör. http://localhost:3000).",oppLeft:"Rakip oyundan ayrıldı.",lost:"Bağlantı koptu.",badfleet:"Gemi yerleşimi geçersiz."},
 en:{title:"Battleship",sub:"Place your fleet, then find and sink the enemy ships.",vsCpu:"Play the computer",online:"Online 2 players",soon:"coming soon",
-place:"Place your ships",placeHint:"Tap a cell to preview the ship. Tap the same cell again to place it, or tap another cell to move the preview. Press R or the Rotate button to change direction.",rotate:"Rotate",horiz:"horizontal",vert:"vertical",random:"Place randomly",reset:"Reset",start:"Start battle",
+place:"Place your ships",placeHint:"Click or tap a cell and the ship starts there. Press R or the Rotate button to change direction.",rotate:"Rotate",horiz:"horizontal",vert:"vertical",random:"Place randomly",reset:"Reset",start:"Start battle",
 yours:"Your board",enemy:"Enemy board",left:"ships left",yourTurn:"Your turn: pick a cell on the enemy board.",cpuTurn:"The computer is firing…",you:"You",cpu:"Computer",
 miss:"Miss",hit:"Hit!",sunk:"Sunk!",win:"You win!",lose:"You lose",winSub:"You sank every enemy ship.",loseSub:"All your ships were sunk.",shots:"Your shots",again:"Play again",menu:"Main menu",
 carrier:"Carrier",battleship:"Battleship",cruiser:"Cruiser",submarine:"Submarine",destroyer:"Destroyer",none:"No shots yet.",diff:"Difficulty",easy:"Easy",hard:"Hard",sndOn:"Sound on",sndOff:"Sound off",opp:"Opponent",lobbyHint:"Create a room and send the code to a friend, or join by entering their code.",createRoom:"Create room",joinRoom:"Join with a code",join:"Join",code:"Room code",roomCode:"Room code",shareCode:"Send this code to your friend. The placement screen opens when they join.",ready:"Ready",waitOpp:"Waiting for the opponent…",oppReady:"Opponent is ready, place your fleet too.",oppTurn:"The opponent is firing…",oppRematch:"The opponent wants a rematch.",notfound:"No room found with this code.",full:"This room is full.",connfail:"Could not connect to the server.",needServer:"Open the game through the server for online mode (e.g. http://localhost:3000).",oppLeft:"The opponent left the game.",lost:"Connection lost.",badfleet:"Invalid ship placement."}};
@@ -185,9 +185,8 @@ function render(){
  app.innerHTML=screens[S.screen]();S.fx=null;preview()}
 function preview(){
  document.querySelectorAll(".pv,.bad").forEach(e=>e.classList.remove("pv","bad"));
- const i=S.sel!=null?S.sel:S.hover;
- if(S.screen!=="place"||i<0||S.idx>=FLEET.length)return;
- const len=FLEET[S.idx].l,r=i/10|0,c=i%10,ok=canPlace(S.mine,i,len,S.h);
+ if(S.screen!=="place"||S.hover<0||S.idx>=FLEET.length)return;
+ const len=FLEET[S.idx].l,i=S.hover,r=i/10|0,c=i%10,ok=canPlace(S.mine,i,len,S.h);
  for(let k=0;k<len;k++){const rr=S.h?r:r+k,cc=S.h?c+k:c;if(rr>9||cc>9)continue;
   const el=document.querySelector(`#mine [data-i="${rr*10+cc}"]`);if(el)el.classList.add(ok?"pv":"bad")}}
 
@@ -211,8 +210,8 @@ function act(a,v){
  else if(a==="new")newGame();
  else if(a==="menu"){closeNet();S={screen:"menu",gid:++gid};render()}
  else if(a==="rotate"){S.h=!S.h;render()}
- else if(a==="reset"){S.mine=newBoard();S.idx=0;S.sel=null;render()}
- else if(a==="random"){S.mine=randomize();S.idx=FLEET.length;S.sel=null;sfx("place");render()}
+ else if(a==="reset"){S.mine=newBoard();S.idx=0;render()}
+ else if(a==="random"){S.mine=randomize();S.idx=FLEET.length;sfx("place");render()}
  else if(a==="start"){if(S.mode==="online"){S.ready=true;send({t:"ready",ships:S.mine.ships.map(s=>({n:s.n,l:s.l,i:s.cells[0],h:s.cells.length<2||s.cells[1]===s.cells[0]+1}))});render();return}S={screen:"battle",mine:S.mine,enemy:randomize(),turn:"me",shotsMe:0,gid:S.gid};render()}}
 /* ---- online ---- */
 let net=null;
@@ -226,7 +225,7 @@ function connect(then){closeNet();
  net.onerror=()=>{S.err="connfail";render()};
  net.onclose=()=>{if(["wait","place","battle","end"].includes(S.screen)){S.screen="msg";S.err="lost";render()}}}
 function addShip(b,n,cells,hit){const id=b.ships.length;cells.forEach(c=>{b.cells[c]=id;if(hit)b.shots[c]=2});b.ships.push({n,l:cells.length,cells,hits:hit?cells.length:0})}
-function toPlace(){S.sel=null;S.screen="place";S.mine=newBoard();S.idx=0;S.h=true;S.hover=-1;S.ready=false;S.oppReady=false;S.rm=false;S.oppRm=false}
+function toPlace(){S.screen="place";S.mine=newBoard();S.idx=0;S.h=true;S.hover=-1;S.ready=false;S.oppReady=false;S.rm=false;S.oppRm=false}
 function onMsg(m){
  if(m.t==="created"){S.code=m.code;S.screen="wait";render()}
  else if(m.t==="joined"||m.t==="rematchgo"){toPlace();render()}
@@ -249,9 +248,9 @@ document.addEventListener("click",e=>{
  const el=e.target.closest("[data-act],.cell");if(!el||el.disabled)return;
  if(el.dataset.act){act(el.dataset.act,el.dataset.v);return}
  const i=+el.dataset.i;
- if(S.screen==="place"&&el.dataset.b==="mine"&&S.idx<FLEET.length){const f=FLEET[S.idx];if(S.sel!==i){S.sel=i;preview()}else if(canPlace(S.mine,i,f.l,S.h)){place(S.mine,i,f,S.h);S.idx++;S.sel=null;S.hover=-1;sfx("place");render()}}
+ if(S.screen==="place"&&el.dataset.b==="mine"&&S.idx<FLEET.length){const f=FLEET[S.idx];if(canPlace(S.mine,i,f.l,S.h)){place(S.mine,i,f,S.h);S.idx++;sfx("place");render()}}
  else if(S.screen==="battle"&&el.dataset.b==="enemy")fire(i)});
-document.addEventListener("mouseover",e=>{if(S.screen!=="place"||S.sel!=null)return;const el=e.target.closest(".cell");S.hover=el?+el.dataset.i:-1;preview()});
+document.addEventListener("mouseover",e=>{if(S.screen!=="place")return;const el=e.target.closest(".cell");S.hover=el?+el.dataset.i:-1;preview()});
 document.addEventListener("keydown",e=>{if((e.key==="r"||e.key==="R")&&S.screen==="place"&&S.idx<FLEET.length){S.h=!S.h;render()}});
 render();
 </script>
